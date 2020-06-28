@@ -1,0 +1,114 @@
+{% extends "base_eric.html" %}
+{% load static %}
+
+{% block head %}
+<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.1.1.min.js" integrity="sha384-kLr4fYcqcSpbuI95brIH3vnnYCquzzSxHPU6XGQCIkQRGJwhg0StNbj1eegrHs12" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.1.1.min.js" integrity="sha384-xIGPmVtaOm+z0BqfSOMn4lOR6ciex448GIKG4eE61LsAvmGj48XcMQZtKcE/UXZe" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.1.1.min.js" integrity="sha384-Dc9u1wF/0zApGIWoBbH77iWEHtdmkuYWG839Uzmv8y8yBLXebjO9ZnERsde5Ln/P" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.1.1.min.js" integrity="sha384-cT9JaBz7GiRXdENrJLZNSC6eMNF3nh3fa5fTF51Svp+ukxPdwcU5kGXGPBgDCa2j" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block main %}
+
+
+<h3>Plot Daily Stock Prices</h3>
+<ul>
+<li>Plot daily stock prices for past 30 trading days. Submission for The Data Incabator 12 Day Program Milestone</li>
+<li>Stock Prices from Alpha Vantage.</li>
+<li>Enter Keyword and Press Enter</li>
+</ul>
+<div class = "row">
+		<!-- Keyword-->
+		<div class = "col-sm-12">
+			<div class="form-group form-inline">
+				<input type="text" class="form-control" id="keyword" placeholder = "Keyword">
+				<!-- Select Stock -->
+				<div class="btn-group">
+					<button class="btn btn-light dropdown-toggle" type="button" data-toggle="dropdown" id = 'dd1button'>Stocks<span class='caret'></span></button>
+					<ul class="dropdown-menu" style="width:300px" id = 'dropdown1'></ul>
+				</div>
+				<button type="button", class = "btn btn-default", onclick = "show_plot()">Show Plot</button>
+			</div>
+		</div>
+</div>
+
+<div style = "margin-top:50px" id="myplot"></div>
+
+<script>
+
+	
+function reset_dropdown(btn_id, ul_id, dd_label){ //Reset Dropdown for list of stocks
+	var button = document.getElementById(btn_id);
+	button.textContent = dd_label;
+	var span = document.createElement('span');
+	span.setAttribute('class', 'caret');
+	button.appendChild(span);
+	var kids = 	$("#"+ul_id).children();
+	for (var i = 0; i<kids.length; i++){kids[i].remove();}
+}
+
+function create_dropdown(ul_id, items){ //Create Dropdown for list of stocks
+	var dropdown = document.getElementById(ul_id);
+	items.forEach(function(item,key){
+		var el = document.createElement("li");
+		var a = document.createElement("a");
+		a.className = 'dropdown-item';
+		a.textContent = item
+		el.appendChild(a);
+		dropdown.appendChild(el);
+	})
+}
+
+$(document).ready(function(){//Keyword search when user presses enter after entering keyword
+	 $('#keyword').keypress(function(e){
+		if(e.keyCode==13)
+		keyword_search();
+	 });
+});
+
+$("#dropdown1").on("click", "li a", function(event) {//Once stock is chosen, change dropdown text
+	$("#dd1button").text($(this).text());
+});	
+	
+
+function initialize(){ //Dropdown들 초기화
+	reset_dropdown('dd1button','dropdown1','Stocks');
+}	
+
+
+function keyword_search(){//get list of stocks based on keyword
+	initialize();
+	var keyword = document.getElementById('keyword').value;
+	$.ajax({
+	url: "{% url 'tdi12vkeyword_search' %}",
+	data: {'keyword': keyword},
+	dataType: 'json',
+	success: function (data) {
+		create_dropdown('dropdown1', data.items);
+		$('#dd1button').click();
+		}
+	})
+}
+	
+
+function show_plot(){
+	ticker = $("#dd1button").text();
+	if (ticker == 'Stocks'){
+		alert('Please choose stock ticker');
+		return;
+	}
+	$.ajax({
+		url: "{% url 'tdi12vshow_plot' %}",
+		data: {'ticker':ticker},
+		dataType: 'json',
+		success: function (data) {
+			console.log(data);
+			Bokeh.embed.embed_item(data); 
+		}
+		})
+
+	}
+
+</script>
+
+{% endblock %}

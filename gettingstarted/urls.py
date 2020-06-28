@@ -18,4 +18,9 @@ urlpatterns = [
     path("", hello.views.index, name="index"),
     path("db/", hello.views.db, name="db"),
     path("admin/", admin.site.urls),
+	
+	#The data incabuator 12 day related links
+	path('tdi12/', hello.views.loadmain, name='tdi12'),
+	path('tdi12vkeyword_search/', hello.views.keyword_search, name='tdi12vkeyword_search'),
+	path('tdi12vshow_plot/', hello.views.show_plot, name='tdi12vshow_plot'),
 ]
